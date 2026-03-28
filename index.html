@@ -216,8 +216,8 @@
             justify-content: flex-end;
             padding-bottom: 10vh;
             color: white;
-            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
-                url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=1000');
+            /* background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=1000'); */
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('fotos/ft20.jpg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -651,15 +651,23 @@
             border-radius: 2px;
         }
 
+        #history-grid-dynamic {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* 3 columnas para aprovechar el espacio */
+            gap: 8px;
+            padding: 10px;
+        }
+
         /* Nueva estructura para la galería de historia */
         .history-gallery-container {
-            max-height: 450px;
+            max-height: 500px;
             /* Altura controlada para no ocupar toda la pantalla */
             overflow-y: auto;
             padding: 10px;
             background: rgba(255, 255, 255, 0.5);
             border-radius: 15px;
-            border: 1px solid #f0f0f0;
+            border: 1px solid rgba(114, 177, 189, 0.2);
             scrollbar-width: thin;
             /* Para navegadores modernos */
             scrollbar-color: var(--accent) transparent;
@@ -692,6 +700,11 @@
         @media (max-width: 480px) {
             .hero-names {
                 font-size: 2.8rem;
+            }
+
+            #history-grid-dynamic {
+                grid-template-columns: repeat(2, 1fr);
+                /* 2 columnas en móvil */
             }
 
             .history-gallery-container {
@@ -818,22 +831,7 @@
                 momentos</p>
 
             <div class="history-gallery-container">
-                <div class="history-grid">
-                    <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=800" alt="Momento 1"
-                        loading="lazy" onclick="openLightbox(this.src, true)">
-
-                    <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800" alt="Momento 2"
-                        loading="lazy" onclick="openLightbox(this.src, true)">
-
-                    <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=800" alt="Momento 3"
-                        loading="lazy" onclick="openLightbox(this.src, true)">
-
-                    <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800" alt="Momento 4"
-                        loading="lazy" onclick="openLightbox(this.src, true)">
-
-                    <img src="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=800" alt="Momento 5"
-                        loading="lazy" onclick="openLightbox(this.src, true)">
-                </div>
+                <div class="history-grid" id="history-grid-dynamic"></div>
             </div>
         </section>
 
@@ -931,6 +929,8 @@
         let currentIndexMusic = 0;
 
         let imagesList = [];
+        let historyImagesList = [];
+        let currentGallery = "muro";
         let currentIndex = 0;
         // Animación de Apertura e Inicio de Música
         function handleOpen() {
@@ -1258,17 +1258,25 @@
         let currentImageUrl = "";
         let isCurrentImagePrivate = false;
 
-        function openLightbox(url, esPrivada = false) {
+        function openLightbox(url, esPrivada = false, galleryType = "muro") {
             const lightbox = document.getElementById('lightbox');
             const lightboxImg = document.getElementById('lightbox-img');
-            isCurrentImagePrivate = esPrivada;
 
-            currentIndex = imagesList.indexOf(url);
+            isCurrentImagePrivate = esPrivada;
+            currentGallery = galleryType;
+
+            const activeList = galleryType === "historia"
+                ? historyImagesList
+                : imagesList;
+
+            currentIndex = activeList.indexOf(url);
+
             lightboxImg.src = url;
-            currentImageUrl = url; // 👈 guardamos la imagen actual
+            currentImageUrl = url;
 
             lightbox.style.display = 'flex';
             document.body.style.overflow = 'hidden';
+
             updateCounter();
             updatePrivateControls(esPrivada);
         }
@@ -1284,7 +1292,12 @@
 
         function updateCounter() {
             const counter = document.getElementById('lightbox-counter');
-            counter.innerText = `${currentIndex + 1} / ${imagesList.length}`;
+
+            const activeList = currentGallery === "historia"
+                ? historyImagesList
+                : imagesList;
+
+            counter.innerText = `${currentIndex + 1} / ${activeList.length}`;
         }
 
         async function downloadImage() {
@@ -1472,33 +1485,70 @@
 
                 lastTap = now;
             });
+
+            const totalFotos = 33;
+
+            const fotosHistoria = Array.from(
+                { length: totalFotos },
+                (_, i) => `ft${i + 1}.jpg`
+            );
+
+            const mezclarFotos = (array) => {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            };
+
+            const contenedor = document.getElementById('history-grid-dynamic');
+            historyImagesList = mezclarFotos([...fotosHistoria]).map(f => `fotos/${f}`);
+
+            historyImagesList.forEach((ruta, index) => {
+                const img = document.createElement('img');
+
+                img.src = ruta;
+                img.alt = `Momento ${index + 1}`;
+                img.loading = "lazy";
+                img.onclick = () => openLightbox(ruta, true, "historia");
+
+                contenedor.appendChild(img);
+            });
         });
 
         function nextImage() {
-            if (currentIndex < imagesList.length - 1) {
-                currentIndex++;
-            } else {
-                currentIndex = 0;
-            }
+            const activeList = currentGallery === "historia"
+                ? historyImagesList
+                : imagesList;
+
+            currentIndex = (currentIndex + 1) % activeList.length;
+
             updateImage();
         }
 
         function prevImage() {
-            if (currentIndex > 0) {
-                currentIndex--;
-            } else {
-                currentIndex = imagesList.length - 1;
-            }
+            const activeList = currentGallery === "historia"
+                ? historyImagesList
+                : imagesList;
+
+            currentIndex =
+                (currentIndex - 1 + activeList.length) % activeList.length;
+
             updateImage();
         }
 
         function updateImage() {
             const img = document.getElementById('lightbox-img');
 
+            const activeList = currentGallery === "historia"
+                ? historyImagesList
+                : imagesList;
+
             img.classList.add('changing');
 
             setTimeout(() => {
-                img.src = imagesList[currentIndex];
+                img.src = activeList[currentIndex];
+                currentImageUrl = activeList[currentIndex];
                 img.classList.remove('changing');
                 updateCounter();
             }, 150);
