@@ -10,7 +10,7 @@
     <meta property="og:title" content="¡Nos Casamos! Marce & Johan">
     <meta property="og:description"
         content="Te invitamos a compartir este día tan especial con nosotros. Confirma tu asistencia aquí.">
-    <meta property="og:image" content="https://jo918.github.io/boda/fotos/ft3.jpg">
+    <meta property="og:image" content="https://jo918.github.io/boda/fotos/ft13.jpg">
     <meta property="og:url" content="https://jo918.github.io/boda/">
     <meta property="og:type" content="website">
     <meta name="theme-color" content="#72b1bd">
@@ -696,6 +696,28 @@
             box-shadow: var(--shadow);
         }
 
+        .scroll-hint {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #888;
+    margin-top: 10px;
+    animation: pulse 2s infinite;
+}
+
+.fade-bottom {
+    position: relative;
+}
+
+.fade-bottom::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    pointer-events: none;
+}
+
         /* --- OPTIMIZACIÓN MÓVIL (Media Query) --- */
         @media (max-width: 480px) {
             .hero-names {
@@ -830,9 +852,10 @@
             <p class="serif-italic" style="margin-bottom: 20px; font-size: 0.9rem;">Un recorrido por nuestros mejores
                 momentos</p>
 
-            <div class="history-gallery-container">
+            <div class="history-gallery-container fade-bottom">
                 <div class="history-grid" id="history-grid-dynamic"></div>
             </div>
+            <p id="scroll-hint-text" class="scroll-hint">Desliza para ver más 💛</p>
         </section>
 
         <section class="card reveal" id="galeria-compartida" style="margin: 0 20px;">
@@ -858,6 +881,7 @@
             </div>
 
             <div id="grid-galeria"></div>
+            <p id="scroll-hint-footer" class="scroll-hint">Desliza para continuar 🕊️</p>
         </section>
 
         <section class="reveal">
@@ -912,6 +936,8 @@
     <audio id="audioB"></audio>
 
     <script>
+        
+
         const firstSong = "audio/perfect.mp3";
 
         const restSongs = [
@@ -957,23 +983,52 @@
 
         // Scroll Reveal API
         function initScrollReveal() {
-            const observerOptions = {
-                threshold: 0.15,
-                rootMargin: "-10% 0px -10% 0px"
-            };
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: "0px"
+    };
 
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('active');
-                    } else {
-                        entry.target.classList.remove('active');
-                    }
-                });
-            }, observerOptions);
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            // Referencias a los textos
+            const hintHistoria = document.getElementById('scroll-hint-text');
+            const hintMuro = document.getElementById('scroll-hint-footer');
 
-            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-        }
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+
+                // Si entramos al MURO, ocultamos el hint de la HISTORIA
+                if (entry.target.id === 'galeria-compartida' && hintHistoria) {
+                    hintHistoria.style.opacity = '0';
+                    hintHistoria.style.visibility = 'hidden';
+                }
+
+                // Si entramos a REGALOS (la sección siguiente al muro), ocultamos el hint del MURO
+                // Como la sección de regalos no tiene ID, verificamos si el elemento anterior es la galería
+                if (entry.target.previousElementSibling && entry.target.previousElementSibling.id === 'galeria-compartida' && hintMuro) {
+                    hintMuro.style.opacity = '0';
+                    hintMuro.style.visibility = 'hidden';
+                }
+            } else {
+                entry.target.classList.remove('active');
+
+                // Si salimos del MURO hacia arriba, mostramos el hint de la HISTORIA
+                if (entry.target.id === 'galeria-compartida' && hintHistoria) {
+                    hintHistoria.style.opacity = '1';
+                    hintHistoria.style.visibility = 'visible';
+                }
+
+                // Si salimos de REGALOS hacia arriba, mostramos el hint del MURO
+                if (entry.target.previousElementSibling && entry.target.previousElementSibling.id === 'galeria-compartida' && hintMuro) {
+                    hintMuro.style.opacity = '1';
+                    hintMuro.style.visibility = 'visible';
+                }
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+}
 
         // Countdown
         function startCountdown() {
